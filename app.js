@@ -229,7 +229,8 @@ function enter(id) {
     const isMyth = id !== 'home';
     plate.classList.toggle('is-on', isMyth);
     ritual.hidden = !isMyth;
-    mythBack.hidden = !isMyth;
+    const mb = document.getElementById('mythBack');
+    if (mb) mb.hidden = !isMyth;
     if (id === 'home') {
       par.x = 0; par.y = 0; parT.x = 0; parT.y = 0;
     }
@@ -247,7 +248,8 @@ function enter(id) {
 function returnHome() {
   document.body.classList.remove('is-myth');
   document.body.classList.add('is-home');
-  mythBack.hidden = true;
+  const mb = document.getElementById('mythBack');
+  if (mb) mb.hidden = true;
   if (ritual) ritual.hidden = true;
   syncNav('home');
   // 触发 veil fade 与回调
