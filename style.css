@@ -471,6 +471,14 @@ button, [data-myth], [data-nav], [data-action], .sanctum__label{
   -webkit-tap-highlight-color: transparent;
 }
 #scene{ touch-action: none; }
+
+/* 移动端：确保关闭门按钮可点击 */
+@media (max-width: 768px){
+  .myth__back{
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+}
 @media (max-width:560px){
   .index__name{font-size:1.35rem}
   .index__p{font-size:.82rem}

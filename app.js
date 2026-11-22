@@ -497,3 +497,18 @@
 
   boot();
 })();
+/* ── 移动端专用：确保 myth__back 按钮可被触控点击 ──────────────────────── */
+const mythBack = $('#mythBack');
+if (mythBack) {
+  mythBack.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // 模拟点击
+    const clickEvent = new MouseEvent('click', {
+      view: window,
+      bubbles: true,
+      cancelable: true
+    });
+    mythBack.dispatchEvent(clickEvent);
+  }, { passive: false });
+}
