@@ -444,7 +444,7 @@ body.is-myth .sanctum__labels{visibility:hidden}
 .index__close span{font-size:1rem;letter-spacing:0}
 
 @media (max-width:900px){
-  .sanctum__labels{display:none}
+  .sanctum__labels{display:block;padding-bottom:env(safe-area-inset-bottom,0px)}
   .sanctum__hint{display:none}
   .sanctum__enter{
     display:inline-flex;align-items:center;gap:12px;
@@ -460,7 +460,17 @@ body.is-myth .sanctum__labels{visibility:hidden}
   .index__arrow{display:none}
   .index__head{flex-direction:column;align-items:flex-start;gap:12px}
   .index__lede{text-align:left}
+  /* 滚动锁定：打开六道门 / 关于 时禁止页面滚动 */
+  body.is-locked{overflow:hidden;position:fixed;width:100%;height:100%;touch-action:none}
+  .plate{padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+  .myth__back{padding-bottom:env(safe-area-inset-bottom,0px)}
 }
+/* 触屏大目标：避免误触与缩放干扰 */
+button, [data-myth], [data-nav], [data-action], .sanctum__label{
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+#scene{ touch-action: none; }
 @media (max-width:560px){
   .index__name{font-size:1.35rem}
   .index__p{font-size:.82rem}

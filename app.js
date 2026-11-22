@@ -384,7 +384,7 @@
       const k = sc.onDown(p.x, p.y, sc.S, W, H);
       if (k) feedback(k, p.x, p.y);
     }
-    canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId);
+    try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
   });
   canvas.addEventListener('pointermove', (e) => {
     const sc = scene();
@@ -471,6 +471,7 @@
     buildDoors();
     resize();
     window.addEventListener('resize', () => { resize(); }, { passive: true });
+    window.addEventListener('orientationchange', () => { setTimeout(() => resize(), 100); }, { passive: true });
     requestAnimationFrame((n) => { lastT = n; frame(n); });
 
     let p = 0;
