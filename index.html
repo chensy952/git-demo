@@ -1,1 +1,118 @@
-111222
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>山海 · SHAN HAI — 神话的另一面</title>
+<meta name="description" content="山海之庭：六道门，六个关于人的问题。全部画面由代码实时绘制。" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="is-home">
+
+<div class="stage" id="stage">
+  <canvas id="scene"></canvas>
+  <div class="stage__veil" id="veil"></div>
+  <div class="stage__vignette"></div>
+  <div class="stage__grain"></div>
+  <div class="stage__flash" id="flash"></div>
+</div>
+
+<header class="bar" id="bar">
+  <button class="bar__brand" data-action="home" aria-label="回到山门">
+    <svg class="bar__mark" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="10.4" fill="none" stroke="currentColor" stroke-width=".7"/>
+      <path d="M7 8.4h10M7 12h10M7 15.6h10" stroke="currentColor" stroke-width=".7" stroke-linecap="round"/>
+      <circle cx="12" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width=".7"/>
+    </svg>
+    <span class="bar__word">山 海</span>
+  </button>
+
+  <button class="backlink" id="backlink" data-action="home" hidden>
+    <span>←</span><span>退 回 山 门</span>
+  </button>
+
+  <nav class="bar__nav">
+    <button class="bar__link is-active" data-nav="home">序</button>
+    <button class="bar__link" data-nav="myths">六 门</button>
+    <button class="bar__link" data-nav="about">关 于</button>
+  </nav>
+
+  <button class="bar__sound" id="sound" aria-pressed="false">
+    <span class="bar__sound-icon"><i></i><i></i><i></i><i></i></span>
+    <span class="bar__sound-label">声 音 · 关</span>
+  </button>
+</header>
+
+<main id="world-root">
+
+  <section class="sanctum" id="sanctum">
+    <div class="sanctum__hero" id="hero">
+      <p class="eyebrow"><span class="eyebrow__rule"></span>神 话 的 另 一 面<span class="eyebrow__latin">THE SANCTUARY</span></p>
+      <h1 class="sanctum__title">山<span class="title__gap">海</span></h1>
+      <p class="sanctum__lede">一座庭，六道门。每一道门里都藏着一个问题——<br>关于人，也关于你。</p>
+      <p class="sanctum__latin">Six doors. Six questions about being human.</p>
+    </div>
+
+    <div class="sanctum__labels" id="labels"></div>
+
+    <p class="sanctum__hint" id="hint">移 动 光 标 穿 过 六 道 门 · 点 击 入 内</p>
+    <button class="sanctum__enter" data-nav="myths">开 门 · 六 道 门 之 内 <span>→</span></button>
+  </section>
+
+  <section class="plate" id="plate" aria-live="polite">
+    <span class="plate__index" id="plateIndex">01</span>
+    <h2 class="plate__title" id="plateTitle">愚公移山</h2>
+    <p class="plate__question" id="plateQuestion">坚 持 · 世 代 · 意 义</p>
+    <span class="plate__rule"></span>
+    <p class="plate__premise" id="platePremise">他决定，从第一筐土开始。</p>
+    <p class="plate__note" id="plateNote"></p>
+  </section>
+
+  <section class="ritual" id="ritual" hidden>
+    <p class="ritual__hint" id="ritualHint"></p>
+    <p class="ritual__status" id="ritualStatus"></p>
+  </section>
+
+  <button class="myth__back" id="mythBack" data-action="home" hidden>
+    <span class="myth__back-x">×</span><span>退 出 此 门</span>
+  </button>
+
+  <section class="index" id="index" aria-hidden="true">
+    <div class="index__head">
+      <p class="index__eyebrow">六 道 门 · THE SIX DOORS</p>
+      <p class="index__lede">选一道门。<br>里面有一件必须动手的事。</p>
+    </div>
+    <ol class="index__list" id="indexList"></ol>
+    <button class="index__close" data-action="closeIndex" aria-label="关闭">关 闭 <span>×</span></button>
+  </section>
+
+</main>
+
+<aside class="about" id="about" aria-hidden="true">
+  <div class="about__inner">
+    <p class="about__eyebrow">关 于 此 庭</p>
+    <h2 class="about__title">神话不是答案，<br>是一台用双手提问的机器。</h2>
+    <p class="about__body">希腊人把人的困境安放在神身上：推石、回望、坠落、追逐。中国人则把困境安放在山河之间：移山、治水、补天、填海。前者问“我是谁”，后者问“我还要不要继续”。</p>
+    <p class="about__body">六道门，六种困境：<em>坚持、代价、极限、承担、责任、执念</em>。每一道门里都有一件可以动手的事——拉弓、疏导、补天、奔走、投石、移山。问题不会替你回答，它只留下机制留下的东西。</p>
+    <p class="about__body">此页全部画面由代码实时绘制：山脊、云海、殿顶、火光、雨线与尘埃，没有一张贴图，没有一个导入的模型。声音由振荡器合成，默认关闭。</p>
+    <p class="about__body about__body--dim">六门之外，别无一物。你看见的，都是被算出来的。</p>
+    <button class="about__close" data-action="closeAbout">关 闭</button>
+  </div>
+</aside>
+
+<div class="boot" id="boot">
+  <div class="boot__mark">山 海</div>
+  <div class="boot__bar"><i id="bootBar"></i></div>
+  <div class="boot__status" id="bootStatus">正 在 起 风</div>
+</div>
+
+<div class="toast" id="toast" aria-live="polite"></div>
+
+<script src="js/paint.js"></script>
+<script src="js/scenes.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
