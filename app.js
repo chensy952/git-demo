@@ -46,15 +46,13 @@ const MYTHS = [
 /* ── 舞台与画布 ───────────────────────────── */
 const stage = document.querySelector('.stage');
 const canvas = document.querySelector('#scene');
+const ctx = canvas.getContext('2d');
 const veilEl = document.querySelector('#veil');
 const flashEl = document.querySelector('#flash');
-const bgCanvas = document.querySelector('#bgCanvas');
-const stageVignette = document.querySelector('.stage__vignette');
-const stageGrain = document.querySelector('.stage__grain');
-const stageFlash = document.querySelector('.stage__flash');
 
 /* ── 元素引用 ──────────────────────────────── */
 const labelsEl = document.querySelector('#labels');
+const indexEl = document.querySelector('#index');
 const indexList = document.querySelector('#indexList');
 const plate = document.querySelector('#plate');
 const plateTitle = document.querySelector('#plateTitle');
@@ -65,6 +63,7 @@ const ritual = document.querySelector('#ritual');
 const ritualHint = document.querySelector('#ritualHint');
 const ritualStatus = document.querySelector('#ritualStatus');
 const mythBack = document.querySelector('#mythBack');
+const aboutEl = document.querySelector('#about');
 const soundBtn = document.querySelector('#sound');
 const soundLabel = document.querySelector('#sound').querySelector('.bar__sound-label');
 
@@ -73,7 +72,10 @@ let current = 'home';
 let down = false;
 let par = { x: 0, y: 0 };
 let parT = { x: 0, y: 0 };
+let veilTimer = null;
+let noteFired = '';
 let SCENES = {};
+let W, H, DPR;
 
 /* ── 辅助函数 ──────────────────────────────── */
 function $(sel) { return document.querySelector(sel); }
@@ -82,6 +84,15 @@ function pos(e) {
   return { x: e.clientX - r.left, y: e.clientY - r.top };
 }
 function scene() { return SCENES[current]; }
+
+/* ── 画布大小 ─────────────────────────────── */
+function resize() {
+  W = canvas.width = canvas.clientWidth;
+  H = canvas.height = canvas.clientHeight;
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  if (SCENES[current] && SCENES[current].resize) SCENES[current].resize(W, H);
+  paintBG();
+}
 
 /* ── 声音 ──────────────────────────────────── */
 const Audio2 = {
@@ -107,15 +118,10 @@ const Audio2 = {
       last = data[i];
     }
 
-    // 五十五与八十二点四一Hz 的风 drone
     const tone1 = ac.createBufferSource();
     tone1.buffer = buf;
     tone1.connect(ac.destination);
     tone1.start(0);
-
-    const freqNode = ac.createGain();
-    freqNode.gain.value = 0.5;
-    freqNode.connect(ac.destination);
   },
   toggle() {
     const on = !this.on;
@@ -177,6 +183,21 @@ const Audio2 = {
   whoosh() { this.noise(0.3, 'white', 10, 0.01, 0.1); }
 };
 
+/* ── 铭牌 ─────────────────────────────────── */
+function fillPlate(id) {
+  const m = SCENES[id].myth || {};
+  const plateIndex = document.querySelector('#plateIndex');
+  const plateTitle = document.querySelector('#plateTitle');
+  const plateQuestion = document.querySelector('#plateQuestion');
+  const platePremise = document.querySelector('#platePremise');
+  const plateNote = document.querySelector('#plateNote');
+  if (plateIndex) plateIndex.textContent = m.num || '01';
+  if (plateTitle) plateTitle.textContent = m.name || '';
+  if (plateQuestion) plateQuestion.textContent = m.keywords || '';
+  if (platePremise) platePremise.textContent = m.premise || '';
+  if (plateNote) plateNote.textContent = '';
+}
+
 /* ── 门与文字 ──────────────────────────────── */
 function buildDoors() {
   MYTHS.forEach((m) => {
@@ -195,6 +216,20 @@ function buildDoors() {
       `</span>`;
     labelsEl.appendChild(b);
   });
+
+  const list = document.querySelector('#indexList');
+  MYTHS.forEach((m) => {
+    const li = document.createElement('li');
+    li.className = 'index__row';
+    li.dataset.myth = m.id;
+    li.innerHTML =
+      `<span class="index__num">${m.num}</span>` +
+      `<span class="index__name">${m.name}</span>` +
+      `<span class="index__q">${m.keywords}</span>` +
+      `<span class="index__p">${m.premise}</span>` +
+      `<span class="index__arrow">→</span>`;
+    list.appendChild(li);
+  });
 }
 
 function openIndex() {
@@ -209,10 +244,37 @@ function closeIndex() {
 function openAbout() {
   aboutEl.classList.add('is-open');
   aboutEl.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('is-locked');
 }
 function closeAbout() {
   aboutEl.classList.remove('is-open');
   aboutEl.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('is-locked');
+}
+
+/* ── 背景绘制 ─────────────────────────────── */
+function paintBG() {
+  const sc = SCENES[current];
+  if (sc && sc.paintStatic) {
+    sc.paintStatic(ctx, W, H);
+  } else {
+    ctx.fillStyle = '#14130f';
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+/* ── 动画帧 ───────────────────────────────── */
+let rafId = null;
+let lastT = 0;
+function frame(t = 0) {
+  const dt = Math.min(t - lastT, 50);
+  lastT = t;
+  const sc = SCENES[current];
+  if (sc) {
+    if (sc.paintDynamic) sc.paintDynamic(ctx, W, H, dt);
+    if (sc.tick) sc.tick(dt);
+  }
+  rafId = requestAnimationFrame(frame);
 }
 
 /* ── 进入 myth 场景 ────────────────────────── */
@@ -252,7 +314,6 @@ function returnHome() {
   if (mb) mb.hidden = true;
   if (ritual) ritual.hidden = true;
   syncNav('home');
-  // 触发 veil fade 与回调
   if (veilEl) veilEl.classList.add('is-on');
   veilTimer = setTimeout(() => {
     veilEl.classList.remove('is-on');
@@ -262,9 +323,9 @@ function returnHome() {
 
 /* ── 导航同步 ──────────────────────────────── */
 function syncNav(state) {
-  const navHome = $('#navHome');
-  const navMyths = $('#navMyths');
-  const navAbout = $('#navAbout');
+  const navHome = document.querySelector('[data-nav="home"]');
+  const navMyths = document.querySelector('[data-nav="myths"]');
+  const navAbout = document.querySelector('[data-nav="about"]');
   if (state === 'home') {
     navHome.classList.add('is-active');
     navMyths.classList.remove('is-active');
@@ -295,7 +356,7 @@ document.addEventListener('click', (e) => {
   const act = e.target.closest('[data-action]');
   if (act) {
     const v = act.dataset.action;
-    if (v === 'home') enter('home');
+    if (v === 'home') returnHome();
     else if (v === 'closeAbout') { closeAbout(); syncNav(current === 'home' ? 'home' : 'myth'); }
     else if (v === 'closeIndex') { closeIndex(); syncNav(current === 'home' ? 'home' : 'myth'); }
   }
@@ -318,7 +379,7 @@ document.addEventListener('touchend', (e) => {
     else if (v === 'about') { openAbout(); syncNav('about'); }
     return;
   }
-});
+}, { passive: false });
 
 /* 标签悬停：让别的标签淡一点 */
 labelsEl.addEventListener('pointerover', (e) => {
@@ -339,6 +400,47 @@ soundBtn.addEventListener('click', () => {
   if (lbl) lbl.textContent = on ? '声音 · 开' : '声音 · 关';
 });
 
+/* ── 键盘 ─────────────────────────────────── */
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (aboutEl.classList.contains('is-open')) return closeAbout();
+    if (indexEl.classList.contains('is-open')) return closeIndex();
+    if (current !== 'home') return returnHome();
+  }
+  if ((e.key === 'r' || e.key === 'R') && current !== 'home') {
+    const sc = SCENES[current];
+    if (sc.reset) sc.reset();
+    noteFired = '';
+  }
+});
+
 /* ── 启动 ─────────────────────────────────── */
+function boot() {
+  const bootEl = document.querySelector('#boot');
+  const bootBar = document.querySelector('#bootBar');
+  const bootStatus = document.querySelector('#bootStatus');
+  const words = ['正 在 起 风', '堆 起 山 脊', '铺 开 水 面', '点 亮 火 盆', '开 门'];
+  let step = 0;
+
+  const bootTimer = setInterval(() => {
+    if (bootBar) bootBar.style.width = `${((step + 1) / words.length) * 100}%`;
+    if (bootStatus) bootStatus.textContent = words[step];
+    step++;
+    if (step >= words.length) {
+      clearInterval(bootTimer);
+      if (bootEl) bootEl.classList.add('is-done');
+      setTimeout(() => {
+        if (bootEl) bootEl.style.display = 'none';
+        buildDoors();
+        resize();
+        rafId = requestAnimationFrame(frame);
+        Audio2.build();
+      }, 300);
+    }
+  }, 200);
+}
+
+window.addEventListener('resize', () => resize());
+
 boot();
 })();
