@@ -74,8 +74,6 @@ let par = { x: 0, y: 0 };
 let parT = { x: 0, y: 0 };
 let veilTimer = null;
 let noteFired = '';
-let SCENES = {};
-let W, H, DPR;
 
 /* ── 辅助函数 ──────────────────────────────── */
 function $(sel) { return document.querySelector(sel); }
@@ -83,14 +81,14 @@ function pos(e) {
   const r = canvas.getBoundingClientRect();
   return { x: e.clientX - r.left, y: e.clientY - r.top };
 }
-function scene() { return SCENES[current]; }
+function scene() { return window.SCENES[current]; }
 
 /* ── 画布大小 ─────────────────────────────── */
 function resize() {
   W = canvas.width = canvas.clientWidth;
   H = canvas.height = canvas.clientHeight;
   DPR = Math.min(window.devicePixelRatio || 1, 2);
-  if (SCENES[current] && SCENES[current].resize) SCENES[current].resize(W, H);
+  if (window.SCENES[current] && window.SCENES[current].resize) window.SCENES[current].resize(W, H);
   paintBG();
 }
 
@@ -148,7 +146,6 @@ const Audio2 = {
     osc.type = type || 'sine';
     osc.frequency.value = freq;
     if (vol !== undefined) gain.gain.value = vol;
-    if (glide) osc.glide = glide;
     osc.start(0);
     gain.gain.value = 0;
     gain.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + dur);
@@ -185,7 +182,7 @@ const Audio2 = {
 
 /* ── 铭牌 ─────────────────────────────────── */
 function fillPlate(id) {
-  const m = SCENES[id].myth || {};
+  const m = window.SCENES[id].myth || {};
   const plateIndex = document.querySelector('#plateIndex');
   const plateTitle = document.querySelector('#plateTitle');
   const plateQuestion = document.querySelector('#plateQuestion');
@@ -254,7 +251,7 @@ function closeAbout() {
 
 /* ── 背景绘制 ─────────────────────────────── */
 function paintBG() {
-  const sc = SCENES[current];
+  const sc = window.SCENES[current];
   if (sc && sc.paintStatic) {
     sc.paintStatic(ctx, W, H);
   } else {
@@ -266,10 +263,11 @@ function paintBG() {
 /* ── 动画帧 ───────────────────────────────── */
 let rafId = null;
 let lastT = 0;
+let W, H, DPR;
 function frame(t = 0) {
   const dt = Math.min(t - lastT, 50);
   lastT = t;
-  const sc = SCENES[current];
+  const sc = window.SCENES[current];
   if (sc) {
     if (sc.paintDynamic) sc.paintDynamic(ctx, W, H, dt);
     if (sc.tick) sc.tick(dt);
@@ -282,7 +280,7 @@ function enter(id) {
   if (veilTimer) clearTimeout(veilTimer);
   veilTimer = setTimeout(() => {
     current = id;
-    const sc = SCENES[id];
+    const sc = window.SCENES[id];
     sc.S = sc.S || {};
     if (sc.reset) sc.reset();
     noteFired = '';
@@ -408,7 +406,7 @@ window.addEventListener('keydown', (e) => {
     if (current !== 'home') return returnHome();
   }
   if ((e.key === 'r' || e.key === 'R') && current !== 'home') {
-    const sc = SCENES[current];
+    const sc = window.SCENES[current];
     if (sc.reset) sc.reset();
     noteFired = '';
   }
